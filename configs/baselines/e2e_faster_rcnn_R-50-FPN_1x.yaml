@@ -4,7 +4,7 @@ MODEL:
   FASTER_RCNN: True
 RESNETS:
   IMAGENET_PRETRAINED_WEIGHTS: 'data/pretrained_model/resnet50_caffe.pth'
-NUM_GPUS: 8
+NUM_GPUS: 1
 SOLVER:
   WEIGHT_DECAY: 0.0001
   LR_POLICY: steps_with_decay

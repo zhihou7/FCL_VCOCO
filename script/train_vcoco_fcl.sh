@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 model_name="e2e_pmf_net_R-50-FPN_1x"
-EXP="final_trainval_base"
+EXP="final_trainval_FCL"
 # use final_trainval_base as baseline
 mkdir -p ./Outputs/e2e_pmfnet_R-50-FPN_1x/${EXP}
 
@@ -18,6 +18,9 @@ CUDA_VISIBLE_DEVICES=0 python -u tools/train_net_step.py --dataset vcoco_trainva
        --expID ${EXP} \
        --load_ckpt data/pretrained_model/e2e_faster_rcnn_R-50-FPN_1x_step119999.pth \
        --use_tfboard |tee ./Outputs/e2e_pmfnet_R-50-FPN_1x/${EXP}/train-log.out
+
+
+
 
 
 # --no_save \

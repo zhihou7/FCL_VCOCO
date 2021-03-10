@@ -545,7 +545,12 @@ def main():
             from tensorboardX import SummaryWriter
             # Set the Tensorboard logger
             tblogger = SummaryWriter(output_dir)
+    if args.expID.__contains__('base'):
+        os.environ['FABRICATOR'] = 'base'
+    else:
+        os.environ['FABRICATOR'] = 'fcl'
 
+    print('log', os.environ['FABRICATOR'])
     ### Training Loop ###
     train_val(maskRCNN, args, optimizer, lr, dataloader, train_size, output_dir, tblogger)
 
@@ -581,7 +586,8 @@ def train_val(model, args, optimizer, lr, dataloader, train_size, output_dir, tb
         DRAW_STEP = args.start_step
 
         for step in range(args.start_step, cfg.SOLVER.MAX_ITER):
-            #print('stepppp: ', step)
+            # print('stepppp: ', step)
+            # print(cfg.SOLVER.WARM_UP_ITERS)
             # Warm up
             if step < cfg.SOLVER.WARM_UP_ITERS:
                 method = cfg.SOLVER.WARM_UP_METHOD

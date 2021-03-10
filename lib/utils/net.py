@@ -225,8 +225,14 @@ def _CorrectMomentum(optimizer, param_keys, correction):
     compatible in scale with lr * grad.
     """
     logger.info('Scaling update history by %.6f (new lr / old lr)', correction)
+    # print(optimizer.state)
     for p_key in param_keys:
-        optimizer.state[p_key]['momentum_buffer'] *= correction
+        # optimizer.state[p_key]['momentum_buffer'] *= correction
+        if 'momentum_buffer' in optimizer.state[p_key]:
+            optimizer.state[p_key]['momentum_buffer'] *= correction
+        else:
+            print(p_key.shape)
+            print('no')
 
 
 def _get_lr_change_ratio(cur_lr, new_lr):

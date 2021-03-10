@@ -1,6 +1,7 @@
-# Pose-aware Multi-level Feature Network for Human Object Interaction Detection
+# Detecting Human-Object Interaction via Fabricated Compositional Learning
 
-Official implementation of "[Pose-aware Multi-level Feature Network for Human Object Interaction Detection](https://arxiv.org/abs/1909.08453)"(ICCV 2019 Oral).
+This code is based on PMFNet. Thanks for their excellent work!
+We only change a few parts based on PMFNet and run the code with a single V100 GPU. You can review the code according to the git status.
 
 **This code follows the implementation architecture of [roytseng-tw/mask-rcnn.pytorch](https://github.com/roytseng-tw/mask-rcnn.pytorch.git).** 
 
@@ -82,7 +83,7 @@ mkdir data
 
 ```
 cd $ROOT
-sh script/train_vcoco.sh
+sh script/train_vcoco_fcl.sh
 ```
 
 
@@ -90,8 +91,7 @@ sh script/train_vcoco.sh
 
 ```
 cd $ROOT
-sh script/test_vcoco.sh
+sh script/test_vcoco_fcl.sh
 ```
 
-Our pretrained model vcoco_best_model_on_test.pth has 52.05 AP on vcoco test set.
 

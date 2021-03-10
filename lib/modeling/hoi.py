@@ -18,7 +18,7 @@ import pdb
 from utils.cbam import SpatialGate, CBAM, CBAM_ks3, ChannelGate
 from modeling.roi_xfrom.roi_align.functions.roi_align import RoIAlignFunction
 
-
+OBJ_NUM = 80
 '''
 An implementation of PMFNet.
 '''
@@ -39,7 +39,7 @@ class PMFNet_Baseline(nn.Module):
         roi_size = cfg.FAST_RCNN.ROI_XFORM_RESOLUTION
         self.roi_size = roi_size
         # ToDo: cfg
-        hidden_dim = cfg.VCOCO.MLP_HEAD_DIM 
+        hidden_dim = cfg.VCOCO.MLP_HEAD_DIM
         print('.......hidden_dim of VCOCO HOI: ', hidden_dim)
         # num_action_classes = cfg.VCOCO.NUM_ACTION_CLASSES  # 26
         action_mask = np.array(cfg.VCOCO.ACTION_MASK).T
@@ -179,6 +179,49 @@ class PMFNet_Baseline(nn.Module):
                interaction_action_accuray_cls, interaction_affinity_cls
 
 
+def get_cooccurence_matrix_coco(verb_class_num=24, obj_class_num=80):
+    # Noticeably, PMFNet predicts 24 clases.
+    if verb_class_num == 24:
+        set_list = [(0, 38), (1, 31), (1, 32), (2, 43), (2, 44), (2, 77), (3, 1), (3, 19), (3, 28), (3, 46), (3, 47),
+                (3, 48), (3, 49), (3, 51), (3, 52), (3, 54), (3, 55), (3, 56), (4, 2), (4, 3), (4, 4), (4, 6), (4, 7),
+                (4, 8), (4, 9), (4, 18), (4, 21), (5, 68), (6, 33), (7, 64), (8, 47), (8, 48), (8, 49), (8, 50),
+                (8, 51), (8, 52), (8, 53), (8, 54), (8, 55), (8, 56), (9, 2), (9, 4), (9, 14), (9, 18), (9, 21),
+                (9, 25), (9, 27), (9, 29), (9, 57), (9, 58), (9, 60), (9, 61), (9, 62), (9, 64), (10, 31), (10, 32),
+                (10, 37), (10, 38), (11, 14), (11, 57), (11, 58), (11, 60), (11, 61), (12, 40), (12, 41), (12, 42),
+                (12, 46), (13, 1), (13, 25), (13, 26), (13, 27), (13, 29), (13, 30), (13, 31), (13, 32), (13, 33),
+                (13, 34), (13, 35), (13, 37), (13, 38), (13, 39), (13, 40), (13, 41), (13, 42), (13, 47), (13, 50),
+                (13, 68), (13, 74), (13, 75), (13, 78), (14, 30), (14, 33), (15, 43), (15, 44), (15, 45), (16, 1),
+                (16, 2), (16, 3), (16, 4), (16, 5), (16, 6), (16, 7), (16, 8), (16, 11), (16, 14), (16, 15), (16, 16),
+                (16, 17), (16, 18), (16, 19), (16, 20), (16, 21), (16, 24), (16, 25), (16, 26), (16, 27), (16, 28),
+                (16, 29), (16, 30), (16, 31), (16, 32), (16, 33), (16, 34), (16, 35), (16, 36), (16, 37), (16, 38),
+                (16, 39), (16, 40), (16, 41), (16, 42), (16, 43), (16, 44), (16, 45), (16, 46), (16, 47), (16, 48),
+                (16, 49), (16, 51), (16, 53), (16, 54), (16, 55), (16, 56), (16, 57), (16, 61), (16, 62), (16, 63),
+                (16, 64), (16, 65), (16, 66), (16, 67), (16, 68), (16, 73), (16, 74), (16, 75), (16, 77), (17, 35),
+                (17, 39), (18, 33), (19, 31), (19, 32), (20, 74), (21, 1), (21, 2), (21, 4), (21, 8), (21, 9), (21, 14),
+                (21, 15), (21, 16), (21, 17), (21, 18), (21, 19), (21, 21), (21, 25), (21, 26), (21, 27), (21, 28),
+                (21, 29), (21, 30), (21, 31), (21, 32), (21, 33), (21, 34), (21, 35), (21, 36), (21, 37), (21, 38),
+                (21, 39), (21, 40), (21, 41), (21, 42), (21, 43), (21, 44), (21, 45), (21, 46), (21, 47), (21, 48),
+                (21, 49), (21, 50), (21, 51), (21, 52), (21, 53), (21, 54), (21, 55), (21, 56), (21, 57), (21, 64),
+                (21, 65), (21, 66), (21, 67), (21, 68), (21, 73), (21, 74), (21, 77), (21, 78), (21, 79), (21, 80),
+                (22, 32), (22, 37), (23, 30), (23, 33)]
+    else:
+        return
+    import pickle
+    import numpy as np
+    verb_to_HO_matrix = np.zeros((len(set_list), verb_class_num))
+    for i in range(len(set_list)):
+        item = set_list[i]
+        verb_to_HO_matrix[i][item[0]] = 1
+    verb_to_HO_matrix = np.transpose(verb_to_HO_matrix)
+
+    obj_to_HO_matrix = np.zeros((len(set_list), obj_class_num))
+    for i in range(len(set_list)):
+        item = set_list[i]
+        obj_to_HO_matrix[i][item[1] - 1] = 1
+    obj_to_HO_matrix = np.transpose(obj_to_HO_matrix)
+    return verb_to_HO_matrix, obj_to_HO_matrix
+
+
 class PMFNet_Final(nn.Module):
     """
     add relative coordinate to parts
@@ -229,6 +272,20 @@ class PMFNet_Final(nn.Module):
             nn.Linear(hidden_dim, 1)
         )
 
+        import os
+        self.obj_embedding = torch.nn.Embedding(80, 256, scale_grad_by_freq=True)
+        self.verb_to_HO_matrix, self.obj_to_HO_matrix = get_cooccurence_matrix_coco()
+        self.obj_fabricator = nn.Sequential(
+            nn.Linear(256+256+256, 512, bias=False),
+            # nn.BatchNorm1d(512),
+            nn.ReLU(inplace=True),
+            nn.Linear(512, 256, bias=False),
+            # nn.BatchNorm1d(2048),
+            nn.ReLU(inplace=True),
+        )
+        self.interaction_fake_fc1 = nn.Linear(hidden_dim*3, hidden_dim)
+        self.interaction_fake_score = nn.Linear(hidden_dim, 222)
+
     def detectron_weight_mapping(self):
         # hc is human centric branch
         # io is interaction branch object part
@@ -243,6 +300,86 @@ class PMFNet_Final(nn.Module):
             'interaction_fc1.bias': 'inter_fc1_b',
         }
         return detectron_weight_mapping, []
+
+    def fabricate_objs(self, verbs, labels, device_id):
+        # import ipdb
+        # ipdb.set_trace()
+        obj_labels = torch.arange(0, OBJ_NUM).cuda(device_id)
+        onehot_obj_labels = torch.zeros(OBJ_NUM, OBJ_NUM).cuda(device_id).scatter_(1, obj_labels.view(OBJ_NUM, 1), 1)
+        # torch.ons
+        obj_labels = torch.unsqueeze(obj_labels, dim=0)
+
+        obj_labels = obj_labels.repeat([len(labels), 1])
+        onehot_obj_labels = torch.unsqueeze(onehot_obj_labels, dim=0).repeat([len(labels), 1, 1])
+        onehot_obj_labels = onehot_obj_labels.view([-1, OBJ_NUM])
+
+        verbs = torch.unsqueeze(verbs, dim=1).repeat([1, OBJ_NUM, 1])
+        verbs = torch.reshape(verbs, [len(verbs) * OBJ_NUM, -1])
+
+        obj_labels = obj_labels.view(-1)
+        obj_feats = self.obj_embedding(obj_labels)  # (b*nr_b*nr_f, coord_feature_dim//2)
+
+        labels = torch.unsqueeze(labels, dim=1).repeat([1, OBJ_NUM, 1])
+        labels = torch.reshape(labels, [len(labels) * OBJ_NUM, -1])
+        noise = torch.randn([len(labels), 256]).cuda(device_id)
+        import os
+        faked_obj = torch.cat([verbs, obj_feats, noise], dim=-1)
+
+
+        verb_obj_matrix = np.matmul(self.verb_to_HO_matrix, self.obj_to_HO_matrix.transpose())
+        verb_obj_matrix = torch.from_numpy(verb_obj_matrix).float().cuda(device_id)
+        # dim of verb
+
+        ll = torch.matmul(labels, verb_obj_matrix)
+        conds = torch.mul(onehot_obj_labels, ll)
+        conds = torch.sum(conds, dim=-1) > 0
+
+        orig_faked_obj = faked_obj
+        orig_obj_labels = obj_labels
+        faked_obj = faked_obj[conds]
+        faked_obj = torch.cat([orig_faked_obj[:1], faked_obj], dim=0)  # avoid none list
+        import os
+
+        faked_obj = self.obj_fabricator(faked_obj)
+        return faked_obj[1:], onehot_obj_labels[conds]
+
+    def remove_vars(self, labels, vars, device_id):
+        # import ipdb
+        # ipdb.set_trace()
+        for i in range(len(vars)):
+            if len(vars[i].shape) == 1:
+                vars[i] = torch.unsqueeze(vars[i], dim=1).repeat([1, OBJ_NUM])
+                # vars[i] = torch.repeat_interleave(torch.unsqueeze(vars[i], dim=1), OBJ_NUM)
+                vars[i] = torch.reshape(vars[i], [len(vars[i]) * OBJ_NUM])
+            else:
+                vars[i] = torch.unsqueeze(vars[i], dim=1).repeat([1, OBJ_NUM, 1])
+                # vars[i] = torch.repeat_interleave(torch.unsqueeze(vars[i], dim=1), OBJ_NUM)
+                vars[i] = torch.reshape(vars[i], [len(vars[i]) * OBJ_NUM, -1])
+
+        old_labels = labels
+        labels = torch.unsqueeze(labels, dim=1).repeat([1, OBJ_NUM, 1])
+        labels = torch.reshape(labels, [len(labels) * OBJ_NUM, -1])
+
+        obj_labels = torch.arange(0, OBJ_NUM).cuda(device_id)
+        onehot_obj_labels = torch.zeros(OBJ_NUM, OBJ_NUM).cuda(device_id).scatter_(1, obj_labels.view(OBJ_NUM, 1), 1)
+        # torch.ons
+
+        onehot_obj_labels = torch.unsqueeze(onehot_obj_labels, dim=0).repeat([len(old_labels), 1, 1])
+        onehot_obj_labels = onehot_obj_labels.view([-1, OBJ_NUM])
+
+        verb_obj_matrix = np.matmul(self.verb_to_HO_matrix, self.obj_to_HO_matrix.transpose())
+        verb_obj_matrix = torch.from_numpy(verb_obj_matrix).float().cuda(device_id)
+        # dim of verb
+
+        ll = torch.matmul(labels, verb_obj_matrix)
+        conds = torch.mul(onehot_obj_labels, ll)
+        conds = torch.sum(conds, dim=-1) > 0
+
+        labels = labels[conds]
+        for i in range(len(vars)):
+            vars[i] = vars[i][conds]
+
+        return vars + [labels]
 
     def forward(self, x, hoi_blob,):
 
@@ -293,7 +430,19 @@ class PMFNet_Final(nn.Module):
 
         x_human = F.relu(self.human_fc1(x_human[interaction_human_inds]), inplace=True)
         x_object = F.relu(self.object_fc1(x_object[interaction_object_inds]), inplace=True)
+
+        # fabricating objects
+        import os
         x_union = F.relu(self.union_fc1(x_union), inplace=True)
+        if 'FABRICATOR' in os.environ and os.environ['FABRICATOR'].startswith('fcl'):
+            interaction_action_labels = torch.from_numpy(hoi_blob['interaction_action_labels']).float().cuda(device_id)
+
+            faked_obj, faked_obj_labels = self.fabricate_objs(x_human, interaction_action_labels, device_id)
+            faked_x_human, faked_x_union, faked_verb, _ = self.remove_vars(interaction_action_labels, [x_human, x_union, interaction_action_labels], device_id)
+            x_human = torch.cat([x_human, faked_x_human], dim=0)
+            x_union = torch.cat([x_union, faked_x_union], dim=0)
+            x_object = torch.cat([x_object, faked_obj], dim=0)
+
         x_interaction = torch.cat((x_human, x_object, x_union), dim=1)
 
         ## encode the pose information into x_interaction feature
@@ -324,7 +473,7 @@ class PMFNet_Final(nn.Module):
 
         # x_object2 = torch.cat((x_object2, x_object2_coord), dim=1) # N x 258 x 5 x 5
         x_object2 = x_object2.unsqueeze(dim=1) # N x 1 x 258 x 5 x 5
-        # N x 2 x 5 x 5 
+        # N x 2 x 5 x 5
 
         x_object2 = x_object2[interaction_object_inds]
         center_xy = x_object2[:,:, -2:, 2:3, 2:3] # N x 1 x 2 x 1 x 1
@@ -343,7 +492,43 @@ class PMFNet_Final(nn.Module):
         x_pose = x_pose_new.view(x_pose_new.shape[0], -1)
         x_pose = F.relu(self.pose_fc1(x_pose), inplace=True)
         x_pose = F.relu(self.pose_fc2(x_pose), inplace=True)
+        # expand feats
+        # import ipdb
+        # ipdb.set_trace()
+        real_length = len(x_pose)
+        if 'FABRICATOR' in os.environ and os.environ['FABRICATOR'].startswith('fcl'):
+            interaction_action_labels = torch.from_numpy(hoi_blob['interaction_action_labels']).float().cuda(device_id)
+            interaction_affinity = torch.from_numpy(hoi_blob['interaction_affinity']).float().cuda(device_id)
+            faked_x_pose, faked_x_pose_line, interaction_affinity, interaction_action_labels = self.remove_vars(interaction_action_labels,
+                                                                                                                [x_pose, x_pose_line, interaction_affinity], device_id)
+            hoi_blob['interaction_orig_length'] = len(hoi_blob['interaction_affinity'])
+            # import ipdb
+            # ipdb.set_trace()
+            if len(interaction_affinity.cpu().numpy()) > 0:
+                x_pose = torch.cat([x_pose, faked_x_pose], dim=0)
+                x_pose_line = torch.cat([x_pose_line, faked_x_pose_line])
+                hoi_blob['interaction_affinity'] = np.concatenate([hoi_blob['interaction_affinity'], interaction_affinity.cpu().numpy()], axis=0)
+                hoi_blob['interaction_action_labels'] = np.concatenate([hoi_blob['interaction_action_labels'], interaction_action_labels.cpu().numpy()], axis=0)
+
+
         x_interaction = torch.cat((x_interaction, x_pose, x_pose_line), dim=1)
+        if 'FABRICATOR' in os.environ and os.environ['FABRICATOR'].startswith('fcl'):
+            real_x_interaction = x_interaction[:real_length]
+            fake_x_interaction = x_interaction[real_length:]
+            # randomly sample len(real_x_interaction) HOIs
+            select_indx = torch.randperm(len(fake_x_interaction))
+            rand_length = len(real_x_interaction)
+
+            select_indx = select_indx[:rand_length]
+            select_indx = select_indx.cuda(device_id)
+            fake_x_interaction = fake_x_interaction[select_indx]
+            x_interaction = torch.cat([real_x_interaction, fake_x_interaction], dim=0)
+
+            hoi_blob['interaction_affinity'] = np.concatenate(
+                [hoi_blob['interaction_affinity'][:real_length], hoi_blob['interaction_affinity'][real_length:][select_indx.cpu().numpy()]], axis=0)
+            hoi_blob['interaction_action_labels'] = np.concatenate(
+                [hoi_blob['interaction_action_labels'][:real_length], hoi_blob['interaction_action_labels'][real_length:][select_indx.cpu().numpy()]], axis=0)
+
         interaction_affinity_score = self.global_affinity(x_interaction)
 
         x_interaction = F.relu(self.interaction_fc1(x_interaction), inplace=True)
@@ -377,8 +562,19 @@ class PMFNet_Final(nn.Module):
         interaction_action_preds = \
             (interaction_action_score.sigmoid() > cfg.VCOCO.ACTION_THRESH).type_as(interaction_action_labels)
 
-        interaction_action_loss = F.binary_cross_entropy_with_logits(
-            interaction_action_score, interaction_action_labels, size_average=True)
+        # import ipdb
+        # ipdb.set_trace()
+        import os
+        if 'FABRICATOR' in os.environ and os.environ['FABRICATOR'].startswith('fcl'):
+            interaction_action_loss = F.binary_cross_entropy_with_logits(
+                interaction_action_score, interaction_action_labels, reduction='none')
+            orig_length = hoi_blob['interaction_orig_length']
+            l = 0.2 # or 0.25: this is following the setting on HICO-DET( 0.5 / 2)
+            interaction_action_loss = (torch.sum(interaction_action_loss[:orig_length]) + torch.sum(interaction_action_loss[orig_length:]) * l) / (orig_length*24 + len(interaction_action_loss[orig_length:])*l*24)
+
+        else:
+            interaction_action_loss = F.binary_cross_entropy_with_logits(
+                interaction_action_score, interaction_action_labels, size_average=True)
 
         interaction_action_accuray_cls = interaction_action_preds.eq(interaction_action_labels).float().mean()
         interaction_affinity_label = torch.from_numpy(hoi_blob['interaction_affinity'].astype(np.float32)).cuda(
@@ -386,6 +582,8 @@ class PMFNet_Final(nn.Module):
         # interaction_affinity_loss = F.cross_entropy(
         #     interaction_affinity_score, interaction_affinity_label)
         # interaction_affinity_preds = (interaction_affinity[:,1]>interaction_affinity[:,0]).type_as(interaction_affinity_label)
+        l = 1. # AFFINITY_WEIGHT is 0.1, thus we simply set l as 1.
+        # interaction_affinity_loss = cfg.VCOCO.AFFINITY_WEIGHT * (torch.sum(interaction_affinity_loss[:orig_length]) + torch.sum(interaction_affinity_loss[orig_length:]) * l) / (orig_length + len(interaction_affinity_loss[orig_length:])*l)
         interaction_affinity_loss = cfg.VCOCO.AFFINITY_WEIGHT * F.binary_cross_entropy_with_logits(
             interaction_affinity_score, interaction_affinity_label.unsqueeze(1), size_average=True)
         interaction_affinity_preds = (interaction_affinity_score.sigmoid() > cfg.VCOCO.ACTION_THRESH).type_as(
